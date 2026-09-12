@@ -5,7 +5,7 @@ const client = new OpenAI({
 })
 
 async function main(prompt = ''){
-    const result = client.completions.chat.create({
+    const result = await client.chat.completions.create({
         model: "gpt-4o",
         messages: [
             {

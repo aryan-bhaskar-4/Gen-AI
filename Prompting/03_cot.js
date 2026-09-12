@@ -1,5 +1,6 @@
 import {OpenAI} from "openai";
 
+
 const client = new OpenAI({
     apikey: process.env[OPENAI_API_KEY],
 })
@@ -48,7 +49,7 @@ async function main(prompt = ''){
     messagesDB.push({role: 'user', content: prompt});
 
     while(true){
-        const result = client.completions.chat.create({
+        const result = await client.chat.completions.create({
           model: "gpt-4o",
           messages: messagesDB,
         });
@@ -59,10 +60,10 @@ async function main(prompt = ''){
 
         console.log(`🤖 (${parsedResult.step}): ${parsedResult.text}`);
 
-        messagesDB.push({role: 'assistant', content: parsedResult});
+        messagesDB.push({role: 'assistant', content: rawResultt});
         
 
-        if(rawResult.step.toUpperCase() === 'OUTPUT') break;
+        if(parsedResult.step.toUpperCase() === 'OUTPUT') break;
     }
     
 }
