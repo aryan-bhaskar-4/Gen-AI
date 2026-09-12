@@ -1,5 +1,6 @@
 import {OpenAI} from "openai";
-import axios from "axios"
+import axios from "axios";
+import { exec } from "child_process";
 
 const client = new OpenAI({
     apikey: process.env[OPENAI_API_KEY],
@@ -10,6 +11,15 @@ async function getWeatherData(cityName) {
   const url = `https://wttr.in/${cityName.toLowerCase()}?format=%C+%t`;
   const response = await axios.get(url, { responseType: "text" });
   return JSON.stringify({ cityName, weatherInfo: response.data });
+}
+
+async function executeCommandOnCli(cmd) {
+  return new Promise((res, rej) => {
+    exec(cmd, (err, out) => {
+      if (err) return res(`There was an Error ${err}`);
+      else return res(out);
+    });
+  });
 }
 
 const SYSTEM_PROMPT = `
@@ -31,6 +41,7 @@ const SYSTEM_PROMPT = `
 
    Available Tools:
   - "getWeatherData": getWeatherData(cityName: string): Returns the realtime weather information of city
+  - "executeCommandOnCli": executeCommandOnCli(command: string): Executes the command on user's device and returns output from stdout
 
   Rules:
   - Always output one step at a time and wait for other step before proceeding.
@@ -111,6 +122,27 @@ async function main(prompt = ''){
               }
             }
             continue;
+            case 'executeCommandOnCli': {
+            try {
+               const toolResult = await executeCommandOnCli(input);
+               console.log(`🛠️(${functionName}):${input}`, toolResult);
+               messagesDB.push({
+                role: 'developer',
+                content: JSON.stringify({
+                   step: 'TOOL_OUTPUT',
+                   output: toolResult,
+              }),
+              });
+            } catch (error) {
+              messagesDB.push({
+               role: 'developer',
+               content: JSON.stringify({ status: 'error', error }),
+              });
+            }
+
+            continue;
+          }
+
           }
         }
     }
