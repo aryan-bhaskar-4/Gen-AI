@@ -15,7 +15,7 @@ const response = await openai.chat.completions.create({
         },
         {
             role: "user",
-            content: "what is 2+2?",
+            content: "what is AI? in short",
         },
     ],
 });
